@@ -1,13 +1,51 @@
 import { User } from "./app";
+import { Entry } from "./app";
 import { AlreadyFriendsError, FriendNotFoundError, FriendRequestAlreadyExistsError, FriendRequestDoc, FriendRequestNotFoundError } from "./concepts/friend";
 import { PostAuthorNotMatchError, PostDoc } from "./concepts/post";
+import { EntryAuthorNotMatchError, EntryDoc } from "./concepts/entry";
+import { MessageDoc } from "./concepts/message";
+import { ProfileDoc } from "./concepts/profile";
 import { Router } from "./framework/router";
 
 /**
  * This class does useful conversions for the frontend.
- * For example, it converts a {@link PostDoc} into a more readable format for the frontend.
+ * For example, it converts a {@link EntryDoc} into a more readable format for the frontend.
  */
 export default class Responses {
+  static async profile(profile: ProfileDoc | null) {
+    if (!profile) {
+      return profile;
+    }
+    const owner = await User.getUserById(profile.owner);
+    return { ...profile, owner: owner.username };
+  }
+
+  static async profiles(profiles: ProfileDoc[]) {
+    const result = [];
+    for (const profile of profiles) {
+      result.push(await this.profile(profile));
+    }
+    return result;
+  }
+
+  static async message(message: MessageDoc | null) {
+    if (!message) {
+      return message;
+    }
+    const sender = await User.getUserById(message.sender);
+    const recipient = await User.getUserById(message.recipient);
+    const entry = await this.entry(await Entry.getById(message.content));
+    return { ...message, sender: sender.username, recipient: recipient.username, content: entry };
+  }
+
+  static async messages(messages: MessageDoc[]) {
+    const result = [];
+    for (const message of messages) {
+      result.push(await this.message(message));
+    }
+    return result;
+  }
+
   /**
    * Convert PostDoc into more readable format for the frontend by converting the author id into a username.
    */
@@ -28,6 +66,25 @@ export default class Responses {
   }
 
   /**
+   * Convert EntryDoc into more readable format for the frontend by converting the author id into a username.
+   */
+  static async entry(entry: EntryDoc | null) {
+    if (!entry) {
+      return entry;
+    }
+    const author = await User.getUserById(entry.author);
+    return { ...entry, author: author.username };
+  }
+
+  /**
+   * Same as {@link entry} but for an array of EntryDoc for improved performance.
+   */
+  static async entries(entries: EntryDoc[]) {
+    const authors = await User.idsToUsernames(entries.map((entry) => entry.author));
+    return entries.map((entry, i) => ({ ...entry, author: authors[i] }));
+  }
+
+  /**
    * Convert FriendRequestDoc into more readable format for the frontend
    * by converting the ids into usernames.
    */
@@ -38,6 +95,10 @@ export default class Responses {
     return requests.map((request, i) => ({ ...request, from: usernames[i], to: usernames[i + requests.length] }));
   }
 }
+Router.registerError(EntryAuthorNotMatchError, async (e) => {
+  const username = (await User.getUserById(e.author)).username;
+  return e.formatWith(username, e._id);
+});
 
 Router.registerError(PostAuthorNotMatchError, async (e) => {
   const username = (await User.getUserById(e.author)).username;
