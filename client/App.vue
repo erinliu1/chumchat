@@ -22,29 +22,26 @@ onBeforeMount(async () => {
 </script>
 
 <template>
-  <header>
+  <header v-if="isLoggedIn && currentRouteName !== 'Start'">
     <nav>
       <div class="title">
-        <img src="@/assets/images/logo.svg" />
-        <RouterLink :to="{ name: 'Home' }">
+        <RouterLink id="logo" :to="{ name: 'Home' }">
+          <img src="@/assets/images/logo.png" />
           <h1>ChumChat</h1>
         </RouterLink>
       </div>
       <ul>
         <li>
-          <RouterLink :to="{ name: 'Home' }" :class="{ underline: currentRouteName == 'Home' }"> Home </RouterLink>
+          <RouterLink :to="{ name: 'Home' }" id="p" :class="{ underline: currentRouteName == 'Home' }"> Home </RouterLink>
         </li>
         <li v-if="isLoggedIn">
-          <RouterLink :to="{ name: 'Settings' }" :class="{ underline: currentRouteName == 'Settings' }"> Settings </RouterLink>
-        </li>
-        <li v-else>
-          <RouterLink :to="{ name: 'Login' }" :class="{ underline: currentRouteName == 'Login' }"> Login </RouterLink>
+          <RouterLink :to="{ name: 'Settings' }" id="p" :class="{ underline: currentRouteName == 'Settings' }"> Settings </RouterLink>
         </li>
       </ul>
     </nav>
-    <article v-if="toast !== null" class="toast" :class="toast.style">
+    <!-- <article v-if="toast !== null" class="toast" :class="toast.style">
       <p>{{ toast.message }}</p>
-    </article>
+    </article> -->
   </header>
   <RouterView />
 </template>
@@ -52,16 +49,22 @@ onBeforeMount(async () => {
 <style scoped>
 @import "./assets/toast.css";
 
+#logo {
+  display: flex;
+  gap: 5px;
+}
 nav {
   padding: 1em 2em;
-  background-color: lightgray;
   display: flex;
   align-items: center;
 }
 
 h1 {
-  font-size: 2em;
   margin: 0;
+}
+
+#p {
+  font-size: 1.3rem;
 }
 
 .title {
@@ -91,5 +94,14 @@ ul {
 
 .underline {
   text-decoration: underline;
+}
+
+@media (max-width: 750px) {
+  h1 {
+    display: none;
+  }
+  nav {
+    padding: 20px;
+  }
 }
 </style>

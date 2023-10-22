@@ -1,12 +1,9 @@
 <script setup lang="ts">
-import { useUserStore } from "@/stores/user";
-import { storeToRefs } from "pinia";
 import { fetchy } from "../../utils/fetchy";
 import { formatDate } from "@/utils/formatDate";
 
 const props = defineProps(["entry"]);
 const emit = defineEmits(["editEntry", "refreshEntries"]);
-const { currentUsername } = storeToRefs(useUserStore());
 
 const deletePost = async () => {
   try {
@@ -19,29 +16,65 @@ const deletePost = async () => {
 </script>
 
 <template>
-  <div>
-    <p class="prompt">{{ props.entry.prompt }}</p>
-    <p class="response">{{ props.entry.response }}</p>
-    <div class="base">
-      <menu v-if="props.entry.author == currentUsername">
-        <li><button class="btn-small pure-button" @click="emit('editEntry', props.entry._id)">Edit</button></li>
-        <li><button class="button-error btn-small pure-button" @click="deletePost">Delete</button></li>
+  <div class="container">
+    <div class="buttons">
+      <menu>
+        <li><button @click="emit('editEntry', props.entry._id)">Edit</button></li>
+        <li><button @click="deletePost">Delete</button></li>
       </menu>
-      <article class="timestamp">
-        <p v-if="props.entry.dateCreated !== props.entry.dateUpdated">Edited on: {{ formatDate(props.entry.dateUpdated) }}</p>
-        <p v-else>Created on: {{ formatDate(props.entry.dateCreated) }}</p>
-      </article>
+    </div>
+    <div class="entry-container">
+      <p class="prompt">{{ props.entry.prompt }}</p>
+      <hr />
+      <p class="response">{{ props.entry.response }}</p>
+    </div>
+    <div class="timestamp">
+      <p v-if="props.entry.dateCreated !== props.entry.dateUpdated">{{ formatDate(props.entry.dateUpdated) }} (edited)</p>
+      <p v-else>{{ formatDate(props.entry.dateCreated) }}</p>
     </div>
   </div>
 </template>
 
 <style scoped>
+.container {
+  width: 100vw;
+}
+button {
+  background-color: transparent;
+  border: 0px;
+  margin: 0px;
+  padding: 0px;
+  width: fit-content;
+}
+button:hover {
+  color: black;
+  text-decoration: underline;
+}
+.entry-container {
+  width: 100vw;
+  border: 1px solid #000;
+  background: radial-gradient(circle, rgba(255, 253, 250, 1) 0%, rgba(255, 246, 216, 1) 100%);
+  border-radius: 1em;
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  padding: 10px;
+}
+hr {
+  border: 0.5px solid #ccc; /* You can adjust the thickness (1px) if needed */
+  margin: 0px;
+}
 p {
   margin: 0em;
 }
-
 .prompt {
   font-weight: bold;
+  text-align: left;
+}
+
+.response {
+  margin-top: 10px;
+  text-align: left;
 }
 div {
   width: 100%;
@@ -57,20 +90,14 @@ menu {
 }
 
 .timestamp {
-  width: 100%;
-  display: flex;
-  justify-content: flex-end;
+  text-align: left;
   font-size: 0.9em;
   font-style: italic;
+  margin-bottom: 5px;
 }
 
-.base {
+.buttons {
   display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.base article:only-child {
-  margin-left: auto;
+  justify-content: flex-end;
 }
 </style>

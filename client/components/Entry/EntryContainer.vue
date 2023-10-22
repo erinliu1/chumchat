@@ -1,68 +1,119 @@
 <script setup lang="ts">
+import CreateEntry from "@/components/Entry/CreateEntry.vue";
+import DisplayEntry from "@/components/Entry/DisplayEntry.vue";
+import EditEntry from "@/components/Entry/EditEntry.vue";
 import { fetchy } from "@/utils/fetchy";
 import { onBeforeMount, ref } from "vue";
-import CreateEntry from "@/components/Entry/CreateEntry.vue";
-import EntryList from "@/components/Entry/EntryList.vue";
 
 const loaded = ref(false);
 let displayedPrompt = ref({ msg: "", prompt: "" });
-const emit = defineEmits(["updatePrompt"]);
 
 async function getRandomPrompt() {
   let prompt;
   try {
     prompt = await fetchy("api/prompts/random", "GET");
     displayedPrompt.value = prompt;
-    emit("updatePrompt");
   } catch (_) {
     return;
   }
 }
 
 onBeforeMount(async () => {
-  await getRandomPrompt();
+  displayedPrompt.value = await fetchy("api/prompts", "GET");
+  await getEntries();
   loaded.value = true;
 });
+
+let entries = ref<Array<Record<string, string>>>([]);
+let editing = ref("");
+let searchAuthor = ref("");
+
+async function getEntries(author?: string) {
+  let query: Record<string, string> = author !== undefined ? { author } : {};
+  let results;
+  try {
+    results = await fetchy("api/entries", "GET", { query });
+  } catch (_) {
+    return;
+  }
+  searchAuthor.value = author ? author : "";
+  entries.value = results;
+}
+
+function updateEditing(id: string) {
+  editing.value = id;
+}
+
+async function handleNewEntry() {
+  await getRandomPrompt();
+  await getEntries();
+}
 </script>
 
 <template>
-  <div>
+  <div class="container">
     <div class="prompt">
       <p v-if="loaded">{{ displayedPrompt.prompt }}</p>
       <button @click="getRandomPrompt">Get a New Prompt</button>
     </div>
-    <CreateEntry :prompt="displayedPrompt" />
-    <EntryList />
+    <CreateEntry :prompt="displayedPrompt" @createdNewEntry="handleNewEntry" />
+    <div class="entryList">
+      <h1>Your Entries</h1>
+      <section class="entries" v-if="loaded && entries.length !== 0">
+        <div v-for="entry in entries" :key="entry._id">
+          <DisplayEntry v-if="editing !== entry._id" :entry="entry" @refreshEntries="getEntries" @editEntry="updateEditing" />
+          <EditEntry v-else :entry="entry" @refreshEntries="getEntries" @editEntry="updateEditing" />
+        </div>
+      </section>
+      <p v-else-if="loaded">No entries found</p>
+      <p v-else>Loading...</p>
+    </div>
   </div>
 </template>
 
 <style scoped>
 div {
-  max-width: 700px;
+  max-width: 750px;
   width: 100%;
-  padding: 10px;
   display: flex;
   align-items: center;
   flex-wrap: wrap;
   display: flex;
 }
-
 .prompt {
-  border: 1px solid #ccc;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  flex-wrap: nowrap;
 }
 
 p {
   font-weight: bold;
-  margin-right: 10px;
+  margin: 0px;
+  padding: 0px;
 }
 
 button {
   margin-left: auto;
+  width: fit-content;
+  padding: 4px;
+  font-size: 0.9rem;
 }
 
-@media (max-width: 700px) {
-  .prompt-container {
-    max-width: 100%;
-  }
+section {
+  display: flex;
+  flex-direction: column;
+}
+.entryList {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  margin-top: 50px;
+  padding: 0px;
+}
+.entries {
+  margin: 0px;
+  padding: 0px;
 }
 </style>

@@ -1,15 +1,14 @@
 <script setup lang="ts">
 import { ref } from "vue";
 import { fetchy } from "../../utils/fetchy";
-import { formatDate } from "../../utils/formatDate";
 
 const props = defineProps(["entry"]);
-const content = ref(props.entry.content);
+const response = ref(props.entry.response);
 const emit = defineEmits(["editEntry", "refreshEntries"]);
 
 const editEntry = async (response: string) => {
   try {
-    await fetchy(`api/entries/${props.entry._id}`, "PATCH", { body: { update: { response: response } } });
+    await fetchy(`api/entries/${props.entry._id}`, "PATCH", { body: { response: response } });
   } catch (e) {
     return;
   }
@@ -19,23 +18,50 @@ const editEntry = async (response: string) => {
 </script>
 
 <template>
-  <form @submit.prevent="editEntry(content)">
-    <p class="author">{{ props.entry.author }}</p>
-    <textarea id="content" v-model="content" placeholder="Edit your response." required> </textarea>
-    <div class="base">
-      <menu>
-        <li><button class="btn-small pure-button-primary pure-button" type="submit">Save</button></li>
-        <li><button class="btn-small pure-button" @click="emit('editEntry')">Cancel</button></li>
-      </menu>
-      <p v-if="props.entry.dateCreated !== props.entry.dateUpdated" class="timestamp">Edited on: {{ formatDate(props.entry.dateUpdated) }}</p>
-      <p v-else class="timestamp">Created on: {{ formatDate(props.entry.dateCreated) }}</p>
+  <div class="container">
+    <div class="entry-container">
+      <form @submit.prevent="editEntry(response)">
+        <p>{{ $props.entry.prompt }}</p>
+        <textarea id="response" v-model="response" :placeholder="response" required></textarea>
+        <div class="base">
+          <menu>
+            <li><button type="submit">Save</button></li>
+            <li><button @click="emit('editEntry')">Cancel</button></li>
+          </menu>
+        </div>
+      </form>
     </div>
-  </form>
+  </div>
 </template>
 
 <style scoped>
+.container {
+  width: 100vw;
+}
+button {
+  background-color: transparent;
+  border: 0px;
+  margin: 0px;
+  padding: 0px;
+  width: fit-content;
+}
+button:hover {
+  color: black;
+  text-decoration: underline;
+}
+.entry-container {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #000;
+  background: radial-gradient(circle, rgba(255, 253, 250, 1) 0%, rgba(255, 246, 216, 1) 100%);
+  border-radius: 1em;
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+}
+
 form {
-  background-color: var(--base-bg);
+  width: 100%;
   display: flex;
   flex-direction: column;
   gap: 0.5em;
@@ -45,6 +71,7 @@ textarea {
   font-family: inherit;
   font-size: inherit;
   height: 6em;
+  padding: 0.5em;
   border-radius: 4px;
   resize: none;
 }

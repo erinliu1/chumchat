@@ -2,8 +2,10 @@ import { storeToRefs } from "pinia";
 import { createRouter, createWebHistory } from "vue-router";
 
 import { useUserStore } from "@/stores/user";
+import StartView from "../views/StartView.vue";
 import HomeView from "../views/HomeView.vue";
 import LoginView from "../views/LoginView.vue";
+import RegisterView from "../views/RegisterView.vue";
 import NotFoundView from "../views/NotFoundView.vue";
 import SettingView from "../views/SettingView.vue";
 
@@ -12,6 +14,11 @@ const router = createRouter({
   routes: [
     {
       path: "/",
+      name: "Start",
+      component: StartView,
+    },
+    {
+      path: "/home",
       name: "Home",
       component: HomeView,
     },
@@ -29,7 +36,19 @@ const router = createRouter({
       beforeEnter: (to, from) => {
         const { isLoggedIn } = storeToRefs(useUserStore());
         if (isLoggedIn.value) {
-          return { name: "Settings" };
+          return { name: "Home" };
+        }
+      },
+    },
+    {
+      path: "/register",
+      name: "Register",
+      component: RegisterView,
+      meta: { requiresAuth: false },
+      beforeEnter: (to, from) => {
+        const { isLoggedIn } = storeToRefs(useUserStore());
+        if (isLoggedIn.value) {
+          return { name: "Home" };
         }
       },
     },

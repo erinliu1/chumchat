@@ -138,8 +138,15 @@ class Routes {
 
   // API FOR PROMPT
   @Router.get("/prompts/random")
-  async getRandomPrompt() {
-    return { msg: "Successfully retrieved a prompt!", prompt: await Prompt.getRandomPrompt() };
+  async getRandomPrompt(session: WebSessionDoc) {
+    const user = WebSession.getUser(session);
+    return { msg: "Successfully retrieved a prompt for session user.", prompt: await Prompt.getRandomPrompt(user) };
+  }
+
+  @Router.get("/prompts")
+  async getCurrentPrompt(session: WebSessionDoc) {
+    const user = WebSession.getUser(session);
+    return { msg: "Retrieved the current prompt for session user.", prompt: await Prompt.getCurrentPrompt(user) };
   }
 
   // API FOR ENTRY
