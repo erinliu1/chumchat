@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import EntryComponent from "@/components/Entry/EntryContainer.vue";
+import Entry from "@/components/Entry/EntryContainer.vue";
 // import PostListComponent from "@/components/Post/PostListComponent.vue";
 import { useUserStore } from "@/stores/user";
 import { storeToRefs } from "pinia";
@@ -10,8 +10,7 @@ const { currentUsername, isLoggedIn } = storeToRefs(useUserStore());
 <template>
   <main>
     <h1>Home</h1>
-    <!-- <PostListComponent /> -->
-    <EntryComponent />
+    <Entry />
   </main>
 </template>
 

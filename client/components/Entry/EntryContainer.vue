@@ -4,9 +4,11 @@ import DisplayEntry from "@/components/Entry/DisplayEntry.vue";
 import EditEntry from "@/components/Entry/EditEntry.vue";
 import { fetchy } from "@/utils/fetchy";
 import { onBeforeMount, ref } from "vue";
+import { useUserStore } from "@/stores/user";
 
 const loaded = ref(false);
 let displayedPrompt = ref({ msg: "", prompt: "" });
+const { currentUsername } = useUserStore();
 
 async function getRandomPrompt() {
   let prompt;
@@ -28,7 +30,7 @@ let entries = ref<Array<Record<string, string>>>([]);
 let editing = ref("");
 let searchAuthor = ref("");
 
-async function getEntries(author?: string) {
+async function getEntries(author = currentUsername) {
   let query: Record<string, string> = author !== undefined ? { author } : {};
   let results;
   try {
@@ -46,12 +48,13 @@ function updateEditing(id: string) {
 
 async function handleNewEntry() {
   await getRandomPrompt();
-  await getEntries();
+  await getEntries(currentUsername);
 }
 </script>
 
 <template>
   <div class="container">
+    <p>{{ currentUsername }}</p>
     <div class="prompt">
       <p v-if="loaded">{{ displayedPrompt.prompt }}</p>
       <button @click="getRandomPrompt">Get a New Prompt</button>

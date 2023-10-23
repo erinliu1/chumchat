@@ -162,7 +162,7 @@ class Routes {
       const authorId = (await User.getUserByUsername(author))._id;
       return Responses.entries(await Entry.getByAuthor(authorId));
     } else if (id) {
-      // return the entry witht the given id
+      // return the entry with the given id
       return Responses.entry(await Entry.getById(id));
     } else {
       // return all the entries
