@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import Profile from "@/components/Profile/ProfileComponent.vue";
 import Entry from "@/components/Entry/EntryContainer.vue";
 // import PostListComponent from "@/components/Post/PostListComponent.vue";
 import { useUserStore } from "@/stores/user";
@@ -9,7 +10,7 @@ const { currentUsername, isLoggedIn } = storeToRefs(useUserStore());
 
 <template>
   <main>
-    <h1>Home</h1>
+    <Profile />
     <Entry />
   </main>
 </template>

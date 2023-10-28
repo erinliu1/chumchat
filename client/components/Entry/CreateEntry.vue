@@ -1,8 +1,9 @@
 <template>
-  <form @submit.prevent="createEntry(response)">
+  <Popup v-if="trigger" @cancel="togglePopup" @private="handlePrivateShare" @public="handlePublicShare" />
+  <div class="form">
     <textarea id="response" v-model="response" placeholder="Type your thoughts here..." required> </textarea>
     <div class="btn-container">
-      <button type="submit">
+      <button @click="togglePopup">
         <span class="text">Share To</span>
         <div class="icon-container">
           <div class="icon icon--left">
@@ -18,45 +19,75 @@
         </div>
       </button>
     </div>
-
     <svg style="display: none">
       <symbol id="arrow-right" viewBox="0 0 20 10">
         <path d="M14.84 0l-1.08 1.06 3.3 3.2H0v1.49h17.05l-3.3 3.2L14.84 10 20 5l-5.16-5z"></path>
       </symbol>
     </svg>
-  </form>
+  </div>
 </template>
 
 <script setup lang="ts">
 import { defineProps, ref } from "vue";
 import { fetchy } from "../../utils/fetchy";
+import Popup from "@/components/Popup/PopupContainer.vue";
 
 const props = defineProps(["prompt"]);
 const response = ref("");
+const entryId = ref("");
 const emit = defineEmits(["createdNewEntry"]);
+const trigger = ref(false);
 
-const createEntry = async (response: string) => {
+const togglePopup = () => {
+  trigger.value = !trigger.value;
+};
+
+const handlePublicShare = async () => {
+  await createEntry();
   try {
-    await fetchy("api/entries", "POST", {
+    await fetchy("api/visibility", "POST", {
       body: {
-        prompt: await props.prompt.prompt,
-        response: response,
+        contentId: entryId.value,
       },
     });
-    emit("createdNewEntry");
   } catch (_) {
     return;
   }
   emptyForm();
+  togglePopup();
+};
+
+const handlePrivateShare = async () => {
+  await createEntry();
+  emptyForm();
+  togglePopup();
+};
+
+const createEntry = async () => {
+  let entry;
+  try {
+    entry = await fetchy("api/entries", "POST", {
+      body: {
+        prompt: await props.prompt.prompt,
+        response: response.value,
+      },
+    });
+    emit("createdNewEntry");
+    entryId.value = entry.entry._id;
+  } catch (e) {
+    console.log(e);
+    return;
+  }
 };
 
 const emptyForm = () => {
   response.value = "";
+  entryId.value = "";
 };
 </script>
 
 <style scoped>
-form {
+.form {
   width: 100vw;
   display: flex;
   align-items: center;

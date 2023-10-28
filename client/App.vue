@@ -22,7 +22,7 @@ onBeforeMount(async () => {
 </script>
 
 <template>
-  <header v-if="isLoggedIn && currentRouteName !== 'Start'">
+  <header v-if="isLoggedIn && currentRouteName !== 'Start' && currentRouteName !== 'Register' && currentRouteName !== 'Login'">
     <nav>
       <div class="title">
         <RouterLink id="logo" :to="{ name: 'Home' }">
@@ -34,14 +34,17 @@ onBeforeMount(async () => {
         <li>
           <RouterLink :to="{ name: 'Home' }" id="p" :class="{ underline: currentRouteName == 'Home' }"> Home </RouterLink>
         </li>
+        <li>
+          <RouterLink :to="{ name: 'Feed' }" id="p" :class="{ underline: currentRouteName == 'Feed' }"> Feed </RouterLink>
+        </li>
+        <li>
+          <RouterLink :to="{ name: 'Friends' }" id="p" :class="{ underline: currentRouteName == 'Friends' }"> Friends </RouterLink>
+        </li>
         <li v-if="isLoggedIn">
           <RouterLink :to="{ name: 'Settings' }" id="p" :class="{ underline: currentRouteName == 'Settings' }"> Settings </RouterLink>
         </li>
       </ul>
     </nav>
-    <!-- <article v-if="toast !== null" class="toast" :class="toast.style">
-      <p>{{ toast.message }}</p>
-    </article> -->
   </header>
   <RouterView />
 </template>

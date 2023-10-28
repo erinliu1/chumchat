@@ -3,12 +3,14 @@ import CreateEntry from "@/components/Entry/CreateEntry.vue";
 import DisplayEntry from "@/components/Entry/DisplayEntry.vue";
 import EditEntry from "@/components/Entry/EditEntry.vue";
 import { fetchy } from "@/utils/fetchy";
+import { storeToRefs } from "pinia";
 import { onBeforeMount, ref } from "vue";
 import { useUserStore } from "@/stores/user";
 
 const loaded = ref(false);
 let displayedPrompt = ref({ msg: "", prompt: "" });
-const { currentUsername } = useUserStore();
+const userStore = useUserStore();
+const { currentUsername } = storeToRefs(userStore);
 
 async function getRandomPrompt() {
   let prompt;
@@ -19,21 +21,14 @@ async function getRandomPrompt() {
     return;
   }
 }
-
-onBeforeMount(async () => {
-  displayedPrompt.value = await fetchy("api/prompts", "GET");
-  await getEntries();
-  loaded.value = true;
-});
-
 let entries = ref<Array<Record<string, string>>>([]);
 let editing = ref("");
 let searchAuthor = ref("");
 
-async function getEntries(author = currentUsername) {
-  let query: Record<string, string> = author !== undefined ? { author } : {};
+async function getEntries(author?: string) {
   let results;
   try {
+    let query: Record<string, string> = author === undefined ? { author: currentUsername.value } : { author };
     results = await fetchy("api/entries", "GET", { query });
   } catch (_) {
     return;
@@ -48,13 +43,19 @@ function updateEditing(id: string) {
 
 async function handleNewEntry() {
   await getRandomPrompt();
-  await getEntries(currentUsername);
+  await getEntries();
 }
+
+onBeforeMount(async () => {
+  await userStore.updateSession();
+  displayedPrompt.value = await fetchy("api/prompts", "GET");
+  await getEntries();
+  loaded.value = true;
+});
 </script>
 
 <template>
   <div class="container">
-    <p>{{ currentUsername }}</p>
     <div class="prompt">
       <p v-if="loaded">{{ displayedPrompt.prompt }}</p>
       <button @click="getRandomPrompt">Get a New Prompt</button>
@@ -81,7 +82,6 @@ div {
   display: flex;
   align-items: center;
   flex-wrap: wrap;
-  display: flex;
 }
 .prompt {
   display: flex;

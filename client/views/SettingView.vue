@@ -5,24 +5,18 @@ import { storeToRefs } from "pinia";
 import UpdateUserForm from "../components/Setting/UpdateUserForm.vue";
 
 const { currentUsername } = storeToRefs(useUserStore());
-const { logoutUser, deleteUser } = useUserStore();
+const { logoutUser } = useUserStore();
 
 async function logout() {
   await logoutUser();
-  void router.push("/");
-}
-
-async function delete_() {
-  await deleteUser();
   void router.push("/");
 }
 </script>
 
 <template>
   <main class="column">
-    <h1>Settings for {{ currentUsername }}</h1>
-    <button class="pure-button pure-button-primary" @click="logout">Logout</button>
-    <button class="button-error pure-button" @click="delete_">Delete User</button>
+    <h1>Settings for @{{ currentUsername }}</h1>
+    <button @click="logout">Logout</button>
     <UpdateUserForm />
   </main>
 </template>

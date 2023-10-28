@@ -4,7 +4,10 @@ import { createRouter, createWebHistory } from "vue-router";
 import { useUserStore } from "@/stores/user";
 import StartView from "../views/StartView.vue";
 import HomeView from "../views/HomeView.vue";
+import FeedView from "../views/FeedView.vue";
+import ProfileView from "../views/ProfileView.vue";
 import LoginView from "../views/LoginView.vue";
+import FriendsView from "../views/FriendsView.vue";
 import RegisterView from "../views/RegisterView.vue";
 import NotFoundView from "../views/NotFoundView.vue";
 import SettingView from "../views/SettingView.vue";
@@ -26,6 +29,24 @@ const router = createRouter({
       path: "/setting",
       name: "Settings",
       component: SettingView,
+      meta: { requiresAuth: true },
+    },
+    {
+      path: "/feed",
+      name: "Feed",
+      component: FeedView,
+      meta: { requiresAuth: true },
+    },
+    {
+      path: "/friends",
+      name: "Friends",
+      component: FriendsView,
+      meta: { requiresAuth: true },
+    },
+    {
+      path: "/profile",
+      name: "Profile",
+      component: ProfileView,
       meta: { requiresAuth: true },
     },
     {

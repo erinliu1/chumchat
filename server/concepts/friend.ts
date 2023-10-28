@@ -17,16 +17,29 @@ export default class FriendConcept {
   public readonly friends = new DocCollection<FriendshipDoc>("friends");
   public readonly requests = new DocCollection<FriendRequestDoc>("friendRequests");
 
-  async getRequests(user: ObjectId) {
-    return await this.requests.readMany({
-      $or: [{ from: user }, { to: user }],
-    });
+  async getSentRequests(user: ObjectId) {
+    return await this.requests.readMany({ from: user });
+  }
+
+  async getReceivedRequests(user: ObjectId) {
+    return await this.requests.readMany({ to: user });
+  }
+
+  async getPendingSentRequests(user: ObjectId) {
+    return await this.requests.readMany({ from: user, status: "pending" });
+  }
+
+  async getPendingReceivedRequests(user: ObjectId) {
+    return await this.requests.readMany({ to: user, status: "pending" });
   }
 
   async sendRequest(from: ObjectId, to: ObjectId) {
+    if (from.equals(to)) {
+      throw new NotAllowedError("Cannot send friend request to yourself!");
+    }
     await this.canSendRequest(from, to);
     await this.requests.createOne({ from, to, status: "pending" });
-    return { msg: "Sent request!" };
+    return { msg: "Chum request successfully sent!" };
   }
 
   async acceptRequest(from: ObjectId, to: ObjectId) {
@@ -34,18 +47,18 @@ export default class FriendConcept {
     // Following two can be done in parallel, thus we use `void`
     void this.requests.createOne({ from, to, status: "accepted" });
     void this.addFriend(from, to);
-    return { msg: "Accepted request!" };
+    return { msg: "Accepted chum request!" };
   }
 
   async rejectRequest(from: ObjectId, to: ObjectId) {
     await this.removePendingRequest(from, to);
     await this.requests.createOne({ from, to, status: "rejected" });
-    return { msg: "Rejected request!" };
+    return { msg: "Rejected chum request!" };
   }
 
   async removeRequest(from: ObjectId, to: ObjectId) {
     await this.removePendingRequest(from, to);
-    return { msg: "Removed request!" };
+    return { msg: "Removed chum request!" };
   }
 
   async removeFriend(user: ObjectId, friend: ObjectId) {
@@ -58,7 +71,7 @@ export default class FriendConcept {
     if (friendship === null) {
       throw new FriendNotFoundError(user, friend);
     }
-    return { msg: "Unfriended!" };
+    return { msg: "Successfully removed this chum!" };
   }
 
   async getFriends(user: ObjectId) {
@@ -112,7 +125,7 @@ export class FriendRequestNotFoundError extends NotFoundError {
     public readonly from: ObjectId,
     public readonly to: ObjectId,
   ) {
-    super("Friend request from {0} to {1} does not exist!", from, to);
+    super("Chum request from {0} to {1} does not exist!", from, to);
   }
 }
 
@@ -121,7 +134,7 @@ export class FriendRequestAlreadyExistsError extends NotAllowedError {
     public readonly from: ObjectId,
     public readonly to: ObjectId,
   ) {
-    super("Friend request between {0} and {1} already exists!", from, to);
+    super("Chum request between {0} and {1} already exists!", from, to);
   }
 }
 
@@ -130,7 +143,7 @@ export class FriendNotFoundError extends NotFoundError {
     public readonly user1: ObjectId,
     public readonly user2: ObjectId,
   ) {
-    super("Friendship between {0} and {1} does not exist!", user1, user2);
+    super("{0} and {1} are not chums!", user1, user2);
   }
 }
 
@@ -139,6 +152,6 @@ export class AlreadyFriendsError extends NotAllowedError {
     public readonly user1: ObjectId,
     public readonly user2: ObjectId,
   ) {
-    super("{0} and {1} are already friends!", user1, user2);
+    super("{0} and {1} are already chums!", user1, user2);
   }
 }

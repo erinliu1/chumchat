@@ -99,16 +99,37 @@ class Routes {
   async removeFriend(session: WebSessionDoc, friend: string) {
     const user = WebSession.getUser(session);
     const friendId = (await User.getUserByUsername(friend))._id;
-    return await Friend.removeFriend(user, friendId);
+    const friendVisibleContent = await Visibility.getVisibleContent(friendId);
+    const userVisibleContent = await Visibility.getVisibleContent(user);
+    const result = await Friend.removeFriend(user, friendId);
+    for (const contentId of friendVisibleContent) {
+      const entry = await Entry.getById(contentId);
+      if (entry.author.toString() === user.toString()) {
+        await Visibility.makeInvisible(friendId, contentId);
+      }
+    }
+    for (const contentId of userVisibleContent) {
+      const entry = await Entry.getById(contentId);
+      if (entry.author.toString() === friendId.toString()) {
+        await Visibility.makeInvisible(user, contentId);
+      }
+    }
+    return result;
   }
 
-  @Router.get("/friend/requests")
-  async getRequests(session: WebSessionDoc) {
+  @Router.get("/friend/requests/sent")
+  async getPendingSentRequests(session: WebSessionDoc) {
     const user = WebSession.getUser(session);
-    return await Responses.friendRequests(await Friend.getRequests(user));
+    return await Responses.friendRequests(await Friend.getPendingSentRequests(user));
   }
 
-  @Router.post("/friend/requests/:to")
+  @Router.get("/friend/requests/received")
+  async getPendingReceivedRequests(session: WebSessionDoc) {
+    const user = WebSession.getUser(session);
+    return await Responses.friendRequests(await Friend.getPendingReceivedRequests(user));
+  }
+
+  @Router.post("/friend/requests")
   async sendFriendRequest(session: WebSessionDoc, to: string) {
     const user = WebSession.getUser(session);
     const toId = (await User.getUserByUsername(to))._id;
@@ -218,13 +239,13 @@ class Routes {
 
   // API FOR PROFILE CONCEPT
   @Router.post("/profiles")
-  async createProfile(session: WebSessionDoc, name: string = "", bio: string = "", profileImg: string = "default-image.jpg") {
+  async createProfile(session: WebSessionDoc, name: string, bio: string, profileImg: string) {
     const user = WebSession.getUser(session);
     const username = (await User.getUserById(user)).username;
     return { msg: `Profile created successfully for ${username}`, profile: await Responses.profile(await Profile.createProfile(user, name, bio, profileImg)) };
   }
 
-  @Router.patch("/profiles/edit")
+  @Router.patch("/profiles")
   async editProfile(session: WebSessionDoc, name?: string, bio?: string, profileImg?: string) {
     const user = WebSession.getUser(session);
     if (name) {
@@ -248,44 +269,56 @@ class Routes {
     return await Responses.profiles(await Profile.getAllProfiles());
   }
 
+  @Router.get("/profiles/randomImg")
+  async getRandomProfileImg() {
+    return await Profile.getRandomProfileImg();
+  }
+
   // API FOR VISIBILITY CONCEPT
   @Router.get("/visibility")
-  async getVisibleContent(session: WebSessionDoc) {
+  async getVisibleContent(session: WebSessionDoc, username?: string) {
     const user = WebSession.getUser(session);
     const contents = await Visibility.getVisibleContent(user);
     const entries = [];
     for (const contentId of contents) {
-      entries.push(await Entry.getById(contentId));
+      const entry = await Entry.getById(contentId);
+      if (username) {
+        const authorId = (await User.getUserByUsername(username))._id;
+        if (entry.author.toString() === authorId.toString()) {
+          entries.push(entry);
+        }
+      } else {
+        entries.push(entry);
+      }
     }
     return await Responses.entries(entries);
   }
 
-  @Router.post("/visibility/visible")
-  async makeVisible(username: string, contentId: ObjectId) {
-    const userId = (await User.getUserByUsername(username))._id;
-    if ((await Entry.getById(contentId)).author.toString() === userId.toString()) {
-      return { msg: "A user's own entry is always visible to themselves." };
+  @Router.get("/visibility/content")
+  async getVisibleUsers(content: ObjectId) {
+    const users = await Visibility.getVisibleUsers(content);
+    const usernames = [];
+    for (const user of users) {
+      usernames.push((await User.getUserById(user)).username);
     }
-    const created = await Visibility.makeVisible(userId, contentId);
-    const entries = [];
-    for (const contentId of created.visibleContent) {
-      entries.push(await Entry.getById(contentId));
-    }
-    return { msg: created.msg, visibleContent: await Responses.entries(entries) };
+    return usernames;
   }
 
-  @Router.post("/visibility/invisible")
-  async makeInvisible(username: string, contentId: ObjectId) {
-    const userId = (await User.getUserByUsername(username))._id;
-    if ((await Entry.getById(contentId)).author.toString() === userId.toString()) {
-      return { msg: "Cannot make a user's own entry invisible to them." };
+  @Router.post("/visibility")
+  async makeContentPublic(session: WebSessionDoc, contentId: ObjectId) {
+    const user = WebSession.getUser(session);
+    const friends = await Friend.getFriends(user);
+    try {
+      await Promise.all(friends.map((friendId) => Visibility.makeVisible(friendId, contentId)));
+      const users = await Visibility.getVisibleUsers(contentId);
+      const usernames = [];
+      for (const user of users) {
+        usernames.push((await User.getUserById(user)).username);
+      }
+      return { msg: "Content made visible to all friends", users: usernames };
+    } catch (e) {
+      console.log("error in making entry visible to all friends");
     }
-    const created = await Visibility.makeInvisible(userId, contentId);
-    const entries = [];
-    for (const contentId of created.visibleContent) {
-      entries.push(await Entry.getById(contentId));
-    }
-    return { msg: created.msg, visibleContent: await Responses.entries(entries) };
   }
 }
 

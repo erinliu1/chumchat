@@ -1,8 +1,30 @@
+<script setup lang="ts">
+import { useUserStore } from "@/stores/user";
+import { storeToRefs } from "pinia";
+import { onBeforeMount } from "vue";
+import { RouterLink } from "vue-router";
+import router from "@/router";
+
+const userStore = useUserStore();
+const { isLoggedIn } = storeToRefs(userStore);
+
+// Make sure to update the session before mounting the app in case the user is already logged in
+onBeforeMount(async () => {
+  try {
+    await userStore.updateSession();
+  } catch {
+    // User is not logged in
+  }
+  if (isLoggedIn.value) {
+    void router.push("/home");
+  }
+});
+</script>
 <template>
   <main>
     <div class="container">
       <div class="header">
-        <img src="/public/logo.png" alt="ChumChat Logo" />
+        <img src="/logo.png" alt="ChumChat Logo" />
         <div class="text">
           <h1>Welcome to ChumChat</h1>
           <h2>A social media app for mindful journaling with friends :)</h2>

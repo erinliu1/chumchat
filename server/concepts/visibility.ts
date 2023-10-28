@@ -10,13 +10,14 @@ export interface VisibilityDoc extends BaseDoc {
 export default class VisibilityConcept {
   public readonly visibilityMap = new DocCollection<VisibilityDoc>("visibilityMap");
 
+  async getVisibleUsers(contentId: ObjectId) {
+    const visibilityData = await this.visibilityMap.readMany({ content: contentId });
+    return visibilityData.map((pair) => pair.user);
+  }
+
   async getVisibleContent(userId: ObjectId) {
     const visibilityData = await this.visibilityMap.readMany({ user: userId });
-    const visibleContentIds = [];
-    for (const visiblePair of visibilityData) {
-      visibleContentIds.push(visiblePair.content);
-    }
-    return visibleContentIds;
+    return visibilityData.map((pair) => pair.content);
   }
 
   async makeVisible(userId: ObjectId, contentId: ObjectId) {
