@@ -1,16 +1,10 @@
-
-import EntryContainerVue from '../Entry/EntryContainer.vue';
-
-import EntryContainerVue from '../Entry/EntryContainer.vue';
-
-import EntryContainerVue from '../Entry/EntryContainer.vue';
 <script setup lang="ts">
 import UserEntry from "@/components/Entry/UserEntry.vue";
 import { onBeforeMount, ref } from "vue";
 import { fetchy } from "@/utils/fetchy";
 
 const loaded = ref(false);
-let entries = ref(null);
+let entries = ref([{ _id: "", author: "" }]);
 
 async function getEntries() {
   let results;

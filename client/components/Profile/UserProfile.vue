@@ -5,8 +5,8 @@ import { fetchy } from "@/utils/fetchy";
 
 const loaded = ref(false);
 const { username } = defineProps(["username"]);
-let profile = ref(null);
-let entries = ref(null);
+let profile = ref({ profileImg: "", name: "", bio: "" });
+let entries = ref([{ _id: "" }]);
 
 async function getEntries() {
   let results;

@@ -7,8 +7,8 @@ import { useUserStore } from "@/stores/user";
 import { storeToRefs } from "pinia";
 
 const loaded = ref(false);
-let sent_requests = ref([]);
-let received_requests = ref([]);
+let sent_requests = ref([{ _id: "", to: "", from: "" }]);
+let received_requests = ref([{ _id: "", to: "", from: "" }]);
 let to_username = ref("");
 const userStore = useUserStore();
 const { currentUsername } = storeToRefs(userStore);

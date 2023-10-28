@@ -6,7 +6,7 @@ import { onBeforeMount, ref } from "vue";
 const { request, type } = defineProps(["request", "type"]);
 const emit = defineEmits(["refresh", "accept"]);
 const loaded = ref(false);
-let profile = ref(null);
+let profile = ref({ profileImg: "", name: "", bio: "" });
 
 async function removeFriendRequest() {
   try {

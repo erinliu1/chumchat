@@ -6,7 +6,7 @@ import router from "../../router";
 const { friend } = defineProps(["friend"]);
 const emit = defineEmits(["delete"]);
 const loaded = ref(false);
-let profile = ref(null);
+let profile = ref({ profileImg: "", name: "", bio: "" });
 
 async function viewProfile() {
   void router.push({ name: "Profile", query: { username: friend } });
