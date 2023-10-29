@@ -20,7 +20,7 @@ const props = defineProps(["entry"]);
 
 <style scoped>
 .container {
-  width: 100vw;
+  width: 100%;
 }
 button {
   background-color: transparent;
@@ -34,7 +34,6 @@ button:hover {
   text-decoration: underline;
 }
 .entry-container {
-  max-width: 750px;
   width: 100%;
   border: 1px solid #000;
   background: radial-gradient(circle, rgba(255, 253, 250, 1) 0%, rgba(255, 246, 216, 1) 100%);

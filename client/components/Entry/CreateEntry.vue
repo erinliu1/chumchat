@@ -1,5 +1,5 @@
 <template>
-  <Popup v-if="trigger" @cancel="togglePopup" @private="handlePrivateShare" @public="handlePublicShare" />
+  <Popup v-if="trigger && loaded" :friends="friends" @cancel="togglePopup" @private="handlePrivateShare" @public="handlePublicShare" @message="handleMessage" />
   <div class="form">
     <textarea id="response" v-model="response" placeholder="Type your thoughts here..." required> </textarea>
     <div class="btn-container">
@@ -25,10 +25,11 @@
       </symbol>
     </svg>
   </div>
+  <div class="m" v-if="messageSent">Message sent successfully!</div>
 </template>
 
 <script setup lang="ts">
-import { defineProps, ref } from "vue";
+import { onBeforeMount, ref } from "vue";
 import { fetchy } from "../../utils/fetchy";
 import Popup from "@/components/Popup/PopupContainer.vue";
 
@@ -37,10 +38,23 @@ const response = ref("");
 const entryId = ref("");
 const emit = defineEmits(["createdNewEntry"]);
 const trigger = ref(false);
+const friends = ref("");
+const loaded = ref(false);
+const messageSent = ref(false);
 
 const togglePopup = () => {
   trigger.value = !trigger.value;
 };
+
+async function getFriends() {
+  let results;
+  try {
+    results = await fetchy(`api/friends`, "GET");
+  } catch (_) {
+    return;
+  }
+  friends.value = results;
+}
 
 const handlePublicShare = async () => {
   await createEntry();
@@ -59,6 +73,24 @@ const handlePublicShare = async () => {
 
 const handlePrivateShare = async () => {
   await createEntry();
+  emptyForm();
+  togglePopup();
+};
+
+const handleMessage = async (friend: string) => {
+  await createEntry();
+  try {
+    await fetchy("api/messages", "POST", {
+      body: {
+        recipientUsername: friend,
+        content: entryId.value,
+      },
+    });
+    messageSent.value = true;
+  } catch (e) {
+    console.log(e);
+    return;
+  }
   emptyForm();
   togglePopup();
 };
@@ -84,9 +116,20 @@ const emptyForm = () => {
   response.value = "";
   entryId.value = "";
 };
+
+onBeforeMount(async () => {
+  await getFriends();
+  loaded.value = true;
+});
 </script>
 
 <style scoped>
+.m {
+  width: 100%;
+  text-align: center;
+  margin-top: 10px;
+  color: green;
+}
 .form {
   width: 100vw;
   display: flex;

@@ -92,7 +92,7 @@ ul {
   display: flex;
   align-items: center;
   flex-direction: row;
-  gap: 1em;
+  gap: 20px;
 }
 
 .underline {
@@ -104,7 +104,11 @@ ul {
     display: none;
   }
   nav {
-    padding: 20px;
+    font-size: 1rem;
+    padding: 15px;
+  }
+  ul {
+    gap: 10px;
   }
 }
 </style>

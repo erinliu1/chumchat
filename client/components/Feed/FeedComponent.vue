@@ -1,10 +1,23 @@
 <script setup lang="ts">
 import UserEntry from "@/components/Entry/UserEntry.vue";
+import MiniProfile from "@/components/Profile/MiniProfile.vue";
 import { onBeforeMount, ref } from "vue";
 import { fetchy } from "@/utils/fetchy";
 
 const loaded = ref(false);
 let entries = ref([{ _id: "", author: "" }]);
+let messages = ref([{ _id: "", content: "", sender: "" }]);
+
+async function getMessages() {
+  let results;
+  try {
+    results = await fetchy("api/messages/received", "GET");
+  } catch (e) {
+    console.log(e);
+    return;
+  }
+  messages.value = results.messages;
+}
 
 async function getEntries() {
   let results;
@@ -19,20 +32,42 @@ async function getEntries() {
 
 onBeforeMount(async () => {
   await getEntries();
+  await getMessages();
   loaded.value = true;
 });
 </script>
 
 <template>
   <div v-if="loaded" class="container">
-    <div class="entryList">
-      <h1>What your chums are thinking</h1>
-      <section class="entries" v-if="loaded && entries.length !== 0">
-        <div v-for="entry in entries" :key="entry._id">
-          <p class="username">@{{ entry.author }}</p>
-          <UserEntry :entry="entry" />
+    <div class="entryList" id="messages">
+      <h1>Special messages for you</h1>
+      <div class="entries" v-if="loaded && messages.length !== 0">
+        <div class="entry" v-for="message in messages" :key="message._id">
+          <p class="username">
+            <b>From @{{ message.sender }}</b>
+          </p>
+          <div class="d">
+            <MiniProfile :username="message.sender" />
+            <UserEntry :entry="message.content" />
+          </div>
         </div>
-      </section>
+      </div>
+      <p v-else-if="loaded">No entries found</p>
+      <p v-else>Loading...</p>
+    </div>
+    <div class="entryList" id="notMessages">
+      <h1>What your chums are thinking</h1>
+      <div class="entries" v-if="loaded && entries.length !== 0">
+        <div class="entry" v-for="entry in entries" :key="entry._id">
+          <p class="username">
+            <b>From @{{ entry.author }}</b>
+          </p>
+          <div class="d">
+            <MiniProfile :username="entry.author" />
+            <UserEntry :entry="entry" />
+          </div>
+        </div>
+      </div>
       <p v-else-if="loaded">No entries found</p>
       <p v-else>Loading...</p>
     </div>
@@ -40,8 +75,18 @@ onBeforeMount(async () => {
 </template>
 
 <style scoped>
+.d {
+  display: flex;
+  flex-direction: row;
+  gap: 5px;
+}
 .username {
+  margin-left: 66px;
   text-align: left;
+}
+.entries {
+  max-width: 750px;
+  width: 100%;
 }
 .entryList {
   width: 100%;
@@ -53,7 +98,6 @@ onBeforeMount(async () => {
   padding: 0px;
 }
 .container {
-  max-width: 750px;
   width: 100%;
   display: flex;
   flex-direction: column;
